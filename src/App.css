@@ -310,6 +310,57 @@ textarea {
     margin-left: auto;
 }
 
+.repo-toolbar {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    grid-gap: 0.75rem;
+    align-items: center;
+}
+
+.repo-toolbar select {
+    display: block;
+    width: 100%;
+    padding: 0.4rem;
+    font-size: 1.2rem;
+    border: 1px solid #ccc;
+    background: #fff;
+}
+
+.repo-item {
+    align-items: flex-start;
+}
+
+.repo-name {
+    padding-top: 0.25rem;
+    font-weight: 600;
+}
+
+.repo-desc {
+    color: #666;
+    font-size: 0.95rem;
+    margin-top: 0.25rem;
+    max-width: 36rem;
+}
+
+.repo-lang {
+    display: inline-block;
+    margin-top: 0.4rem;
+    padding: 0.1rem 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    color: #555;
+}
+
+.repo-meta {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.repo-meta p {
+    padding-top: 0.25rem;
+}
+
 /* Mobile Styles */
 @media (max-width: 700px) {
     .grid-2,
@@ -326,5 +377,9 @@ textarea {
     .navbar {
         display: block;
         text-align: center;
+    }
+
+    .repo-toolbar {
+        grid-template-columns: 1fr;
     }
 }
