@@ -62,6 +62,9 @@ const User = ({ match }) => {
       )}
       <div>
         <input type="text" name="text" placeholder="Search for User's Repositories" onChange={onChange} />
+        {(!displayRepos || displayRepos.length === 0) && (
+          <p className="text-center">This user has no public repositories.</p>
+        )}
         {
           displayRepos && displayRepos.map(repo => {
             return (

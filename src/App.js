@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import GitState from './context/gitState';
 
 import Navbar from './components/Navbar';
+import Alert from './components/Alert';
 import NotFound from './pages/NotFound';
 import Home from './pages/Home';
 import User from './pages/User';
@@ -15,6 +16,7 @@ function App() {
         <div className="App">
           <Navbar />
           <div className="container">
+            <Alert />
             <Switch>
               <Route exact path="/" component={Home} />
               <Route exact path="/user/:login" component={User} />
