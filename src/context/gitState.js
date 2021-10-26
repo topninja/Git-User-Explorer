@@ -2,7 +2,7 @@ import React, { useReducer } from 'react'
 import axios from 'axios'
 import gitContext from './gitContext'
 import gitReducer from './gitReducer'
-import { SEARCH_USERS, SET_LOADING, CLEAR_USERS, GET_REPOSITORIES, GET_USER, SET_USER } from './gitActionTypes'
+import { SEARCH_USERS, SET_LOADING, CLEAR_USERS, GET_REPOSITORIES, GET_USER, SET_USER, SET_ERROR } from './gitActionTypes'
 
 const gitAPI = axios.create({
   baseURL: process.env.REACT_APP_GITHUB_API_URL,
@@ -12,12 +12,24 @@ if (gitToken) {
   gitAPI.defaults.headers.common.Authorization = `token ${gitToken}`
 }
 
+const getErrorMessage = (err, fallback) => {
+  if (err.response && err.response.status === 403) {
+    return 'GitHub API rate limit reached. Please try again later.'
+  }
+  if (err.response && err.response.status === 404) {
+    return 'The requested GitHub user could not be found.'
+  }
+  return fallback
+}
+
 const GitState = props => {
   const initialState = {
     users: [],
     user: {},
     repositories: [],
-    loading: false
+    loading: false,
+    error: null,
+    searched: false
   }
 
   const [state, dispatch] = useReducer(gitReducer, initialState);
@@ -29,22 +41,29 @@ const GitState = props => {
     }
     else {
       setLoading();
-      const res = await gitAPI.get(
-        `/search/users?q=${text}`
-      );
-      if (res.data && res.data.items) {
-        await Promise.all(
-          res.data.items.map(async (item) => {
-            const { data } = await gitAPI.get(
-              `/users/${item.login}/repos`
-            );
-            item.repoCount = data.length
-            return item
-          })
+      try {
+        const res = await gitAPI.get(
+          `/search/users?q=${text}`
         );
+        if (res.data && res.data.items) {
+          await Promise.all(
+            res.data.items.map(async (item) => {
+              const { data } = await gitAPI.get(
+                `/users/${item.login}/repos`
+              );
+              item.repoCount = data.length
+              return item
+            })
+          );
+          dispatch({
+            type: SEARCH_USERS,
+            payload: res.data.items
+          });
+        }
+      } catch (err) {
         dispatch({
-          type: SEARCH_USERS,
-          payload: res.data.items
+          type: SET_ERROR,
+          payload: getErrorMessage(err, 'Unable to search users. Please try again.')
         });
       }
     }
@@ -54,10 +73,17 @@ const GitState = props => {
   // Get User
   const getUser = async userName => {
     setLoading();
-    const res = await gitAPI.get(
-      `/users/${userName}`
-    );
-    dispatch({ type: GET_USER, payload: res.data });
+    try {
+      const res = await gitAPI.get(
+        `/users/${userName}`
+      );
+      dispatch({ type: GET_USER, payload: res.data });
+    } catch (err) {
+      dispatch({
+        type: SET_ERROR,
+        payload: getErrorMessage(err, 'Unable to load this user profile.')
+      });
+    }
   };
 
   // Set User
@@ -68,14 +94,21 @@ const GitState = props => {
   // Get Repos
   const getRepositories = async userName => {
     setLoading();
-    const res = await gitAPI.get(
-      `/users/${userName}/repos?sort=created:asc`
-    );
+    try {
+      const res = await gitAPI.get(
+        `/users/${userName}/repos?sort=created:asc`
+      );
 
-    dispatch({
-      type: GET_REPOSITORIES,
-      payload: res.data,
-    });
+      dispatch({
+        type: GET_REPOSITORIES,
+        payload: res.data,
+      });
+    } catch (err) {
+      dispatch({
+        type: SET_ERROR,
+        payload: getErrorMessage(err, 'Unable to load repositories for this user.')
+      });
+    }
   };
 
 
@@ -90,8 +123,10 @@ const GitState = props => {
       {
         users: state.users,
         user: state.user,
-        repositories: state.repos,
+        repositories: state.repositories,
         loading: state.loading,
+        error: state.error,
+        searched: state.searched,
         searchUsers,
         userClear,
         getUser,

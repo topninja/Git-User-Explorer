@@ -90,7 +90,10 @@ const User = ({ match }) => {
             <option value="updated">Recently updated</option>
           </select>
         </div>
-        {repos.length === 0 && (
+        {(!context.repositories || context.repositories.length === 0) && (
+          <p className="text-center">This user has no public repositories.</p>
+        )}
+        {context.repositories && context.repositories.length > 0 && repos.length === 0 && (
           <p className="text-center">No repositories match this search.</p>
         )}
         {
